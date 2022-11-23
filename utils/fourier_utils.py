@@ -1,6 +1,5 @@
 import pyfftw
 import numpy as np
-from hcmv_pick.utils.decorators import benchmark
 
 
 def fft(image, fftw_object=False):
@@ -21,7 +20,7 @@ def ifft(ft_image, ifftw_object=False):
 
     return image
 
-@benchmark
+
 def get_pyfftw_object(
                         input_shape,
                         input_dtype='float64',
@@ -63,7 +62,7 @@ def get_pyfftw_object(
 
     return fftw_object
 
-@benchmark
+
 def get_pyifftw_object(
                         input_shape,
                         input_dtype='complex128',
@@ -148,6 +147,7 @@ def get_good_box_for_fft(input_dimension):
 
     return new_dimension
 
+
 def get_labelled_shells_2d(output_shape):
     """
     Get labelled fourier shells for a nD volume
@@ -174,6 +174,7 @@ def get_labelled_shells_2d(output_shape):
     labelled_shells -= 1
 
     return labelled_shells
+
 
 def get_labelled_shells_3d(output_shape):
     """
@@ -203,6 +204,7 @@ def get_labelled_shells_3d(output_shape):
     labelled_shells -= 1
 
     return labelled_shells
+
 
 def get_labelled_shells(output_shape):
 
