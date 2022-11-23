@@ -200,7 +200,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
                                               prefix=colorstr('train: '),
                                               shuffle=True,
                                               lowpass=opt.lowpass,
-                                              filter=opt.filter,)
+                                              filter=opt.pre_filter,)
     labels = np.concatenate(dataset.labels, 0)
     mlc = int(labels[:, 0].max())  # max label class
     assert mlc < nc, f'Label class {mlc} exceeds nc={nc} in {data}. Possible class labels are 0-{nc - 1}'
@@ -220,7 +220,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
                                        pad=0.5,
                                        prefix=colorstr('val: '),
                                        lowpass=opt.lowpass,
-                                       filter=opt.filter,)[0]
+                                       filter=opt.pre_filter,)[0]
 
         if not resume:
             if not opt.noautoanchor:
