@@ -345,7 +345,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
         lr = [x['lr'] for x in optimizer.param_groups]  # for loggers
         scheduler.step()
 
-        if RANK in {-1, 0}:
+        if RANK in {-1, 0} and epoch % 10 == 0:
             # mAP
             callbacks.run('on_train_epoch_end', epoch=epoch)
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'names', 'stride', 'class_weights'])
