@@ -471,7 +471,7 @@ def parse_opt(known=False):
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
     parser.add_argument('--local_rank', type=int, default=-1, help='Automatic DDP Multi-GPU argument, do not modify')
     parser.add_argument('--lowpass', type=int, default=-1, help='Apply lowpass filtering')
-    parser.add_argument('--pre_filter', type=str, choices=["ee", "laplacian"], help="Apply filtering")
+    parser.add_argument('--pre_filter', type=str, choices=["ee", "laplacian", "None"], default="None", help="Apply filtering")
 
     # Logger arguments
     parser.add_argument('--entity', default=None, help='Entity')
