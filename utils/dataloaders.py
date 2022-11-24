@@ -135,7 +135,9 @@ def create_dataloader(path,
             stride=int(stride),
             pad=pad,
             image_weights=image_weights,
-            prefix=prefix)
+            prefix=prefix,
+            lowpass=lowpass,
+            filter=filter)
 
     batch_size = min(batch_size, len(dataset))
     nd = torch.cuda.device_count()  # number of CUDA devices
@@ -462,8 +464,11 @@ class LoadImagesAndLabels(Dataset):
         self.stride = stride
         self.path = path
         self.albumentations = Albumentations(size=img_size) if augment else None
+        LOGGER.info(f"Lowpass filtering on the fly to {lowpass} angstroms")
         if lowpass > 0:
             self.lowpass_filter = filtering.get_relion_style_lowpass_filter((4096, 4096), lowpass, 127, 6)
+            self.lowpass_filter_half = filtering.get_relion_style_lowpass_filter((4096, 2048), lowpass, 127, 6)
+            LOGGER.info(f"lowpass filter: {self.lowpass_filter}")
         self.lowpass = lowpass
         self.filter = filter
 
@@ -739,8 +744,6 @@ class LoadImagesAndLabels(Dataset):
             else:  # read image
                 im = cv2.imread(f)  # BGR
                 assert im is not None, f'Image Not Found {f}'
-            if filter == "ee":
-                im = filtering.enhance_edge_features(im)
 
             h0, w0 = im.shape[:2]  # orig hw
             r = self.img_size / max(h0, w0)  # ratio
@@ -748,7 +751,13 @@ class LoadImagesAndLabels(Dataset):
                 interp = cv2.INTER_LINEAR if (self.augment or r > 1) else cv2.INTER_AREA
                 im = cv2.resize(im, (int(w0 * r), int(h0 * r)), interpolation=interp)
             if self.lowpass > 0:
-                im = filtering.apply_fourier_filter(im, self.lowpass_filter)
+                try:
+                    im = filtering.apply_fourier_filter(im, self.lowpass_filter)
+                except ValueError:
+                    im = filtering.apply_fourier_filter(im, self.lowpass_filter_half)
+            if filter == "ee":
+                im = filtering.enhance_edge_features(im)
+
             return im, (h0, w0), im.shape[:2]  # im, hw_original, hw_resized
         return self.ims[i], self.im_hw0[i], self.im_hw[i]  # im, hw_original, hw_resized
 

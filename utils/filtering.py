@@ -2,6 +2,9 @@
 import numpy as np
 
 from utils import fourier_utils as ft_utils
+from utils.general import (DATASETS_DIR, LOGGER, NUM_THREADS, TQDM_BAR_FORMAT, check_dataset, check_requirements,
+                           check_yaml, clean_str, cv2, is_colab, is_kaggle, segments2boxes, unzip_file, xyn2xy,
+                           xywh2xyxy, xywhn2xyxy, xyxy2xywhn)
 
 
 def get_relion_style_lowpass_filter(
@@ -45,11 +48,12 @@ def get_relion_style_lowpass_filter(
 
 
 def apply_fourier_filter(im, fourier_filter):
-
-    ft_im = np.fft.rfft2(im)
+    ft_im = np.fft.rfft2(im[:, :, 0], axes=(0,1))
     ft_im = ft_im * fourier_filter
-    im = np.fft.irfft2(ft_im)
-
+    filt_im = np.fft.irfft2(ft_im, axes=(0,1))
+    im[:, :, 0] = filt_im
+    im[:, :, 1] = filt_im
+    im[:, :, 2] = filt_im
     return im
 
 
