@@ -1,3 +1,4 @@
+import time
 
 import numpy as np
 
@@ -50,10 +51,9 @@ def get_relion_style_lowpass_filter(
 def apply_fourier_filter(im, fourier_filter):
     ft_im = np.fft.rfft2(im[:, :, 0], axes=(0,1))
     ft_im = ft_im * fourier_filter
-    filt_im = np.fft.irfft2(ft_im, axes=(0,1))
-    im[:, :, 0] = filt_im
-    im[:, :, 1] = filt_im
-    im[:, :, 2] = filt_im
+    im[:, :, 0] = np.fft.irfft2(ft_im, axes=(0,1))
+    im[:, :, 1] = im[:, :, 0]
+    im[:, :, 2] = im[:, :, 0]
     return im
 
 
@@ -63,6 +63,7 @@ def enhance_edge_features(image):
                         -1,  5, -1,
                          0, -1,  0,])
 
-    filtered_image = cv2.filter2D(src=image, ddepth=-1, kernel=kernel)
+    filtered_image = np.zeros(image.shape)
+    filtered_image = cv2.filter2D(src=image, ddepth=-1, kernel=kernel, output=filtered_image)
 
     return filtered_image

@@ -468,7 +468,6 @@ class LoadImagesAndLabels(Dataset):
         if lowpass > 0:
             self.lowpass_filter = filtering.get_relion_style_lowpass_filter((4096, 4096), lowpass, 127, 6)
             self.lowpass_filter_half = filtering.get_relion_style_lowpass_filter((4096, 2048), lowpass, 127, 6)
-            LOGGER.info(f"lowpass filter: {self.lowpass_filter}")
         self.lowpass = lowpass
         self.filter = filter
 
@@ -750,14 +749,6 @@ class LoadImagesAndLabels(Dataset):
             if r != 1:  # if sizes are not equal
                 interp = cv2.INTER_LINEAR if (self.augment or r > 1) else cv2.INTER_AREA
                 im = cv2.resize(im, (int(w0 * r), int(h0 * r)), interpolation=interp)
-            if self.lowpass > 0:
-                try:
-                    im = filtering.apply_fourier_filter(im, self.lowpass_filter)
-                except ValueError:
-                    im = filtering.apply_fourier_filter(im, self.lowpass_filter_half)
-            if filter == "ee":
-                im = filtering.enhance_edge_features(im)
-
             return im, (h0, w0), im.shape[:2]  # im, hw_original, hw_resized
         return self.ims[i], self.im_hw0[i], self.im_hw[i]  # im, hw_original, hw_resized
 
@@ -822,6 +813,14 @@ class LoadImagesAndLabels(Dataset):
                                            shear=self.hyp['shear'],
                                            perspective=self.hyp['perspective'],
                                            border=self.mosaic_border)  # border to remove
+
+        if self.lowpass > 0:
+            try:
+                img4 = filtering.apply_fourier_filter(img4, self.lowpass_filter)
+            except ValueError:
+                img4 = filtering.apply_fourier_filter(img4, self.lowpass_filter_half)
+        if filter == "ee":
+            img4 = filtering.enhance_edge_features(img4)
 
         return img4, labels4
 
