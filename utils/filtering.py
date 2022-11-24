@@ -1,6 +1,7 @@
 import time
 
 import numpy as np
+from scipy import stats
 
 from utils import fourier_utils as ft_utils
 from utils.general import (DATASETS_DIR, LOGGER, NUM_THREADS, TQDM_BAR_FORMAT, check_dataset, check_requirements,
@@ -67,3 +68,64 @@ def enhance_edge_features(image):
     filtered_image = cv2.filter2D(src=image, ddepth=-1, kernel=kernel, output=filtered_image)
 
     return filtered_image
+
+def normalise_to_8bit_range(
+                            image,
+                            use_central_portion=True,
+                            ignore_zeros=True
+                            ):
+    norm_image = image[:]
+
+    if use_central_portion:
+        norm_mean, norm_std, norm_min, norm_max \
+                    = _get_mean_of_central_image_portion(
+                                                    norm_image,
+                                                    ignore_zeros=ignore_zeros
+                                                    )
+    elif ignore_zeros:
+        norm_mean = norm_image[norm_image != 0.].mean()
+        norm_min = norm_image[norm_image != 0.].min()
+        norm_max = norm_image[norm_image != 0.].max()
+        norm_std = norm_image[norm_image != 0.].std()
+
+    else:
+        norm_mean = norm_image.mean()
+        norm_std = norm_image.std()
+        norm_max = norm_image.max()
+        norm_min = norm_image.min()
+
+    # normalise
+    #norm_image = (norm_image - norm_min) / (norm_max - norm_min)
+    norm_image = (norm_image - norm_mean) / norm_std
+    m, sig = stats.norm.fit(norm_image)
+    norm_image = norm_image * (64 / sig)
+    norm_image = norm_image + (128 - stats.norm.fit(norm_image)[0])
+    norm_image = np.clip(norm_image, 0, 255)
+
+    return norm_image
+
+def _get_mean_of_central_image_portion(
+                                    norm_image,
+                                    portion=0.5,
+                                    ignore_zeros=True
+                                    ):
+    frac = (1 / portion) * 2
+    qr = int(norm_image.shape[0] / frac)
+    qc = int(norm_image.shape[1] / frac)
+    norm_box = norm_image[
+                    norm_image.shape[0] - qr : norm_image.shape[0] + qr,
+                    norm_image.shape[1] - qc : norm_image.shape[1] + qc]
+    if ignore_zeros:
+        norm_mean, norm_std = stats.norm.fit(norm_box[norm_box != 0.])
+        #norm_mean = norm_box[norm_box != 0.].mean()
+        #norm_std = norm_box[norm_box != 0.].std()
+        norm_min = norm_box[norm_box != 0.].min()
+        norm_max = norm_box[norm_box != 0.].max()
+    else:
+        norm_mean, norm_std = stats.norm.fit(norm_box)
+        #norm_mean = norm_box.mean()
+        #norm_std = norm_box.std()
+        norm_min = norm_box.min()
+        norm_max = norm_box.max()
+
+    return norm_mean, norm_std, norm_min, norm_max

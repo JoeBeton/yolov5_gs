@@ -816,11 +816,15 @@ class LoadImagesAndLabels(Dataset):
 
         if self.lowpass > 0:
             try:
-                img4 = filtering.apply_fourier_filter(img4, self.lowpass_filter)
+                img4 = filtering.apply_fourier_filter(img4.astype(np.float32), self.lowpass_filter)
             except ValueError:
-                img4 = filtering.apply_fourier_filter(img4, self.lowpass_filter_half)
+                img4 = filtering.apply_fourier_filter(img4.astype(np.float32), self.lowpass_filter_half)
         if filter == "ee":
-            img4 = filtering.enhance_edge_features(img4)
+            img4 = filtering.enhance_edge_features(img4.astype(np.float32))
+
+        if self.lowpass > 0 or filter != "None":
+            img4 = filtering.normalise_to_8bit_range(img4)
+            img4 = img4.astype(np.uint8)
 
         return img4, labels4
 
