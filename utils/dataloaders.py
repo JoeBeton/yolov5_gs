@@ -822,7 +822,7 @@ class LoadImagesAndLabels(Dataset):
         if filter == "ee":
             img4 = filtering.enhance_edge_features(img4.astype(np.float32))
 
-        if self.lowpass > 0 or filter != "None":
+        if self.lowpass > 0 or filter != None:
             img4 = filtering.normalise_to_8bit_range(img4)
             img4 = img4.astype(np.uint8)
 
