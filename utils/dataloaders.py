@@ -464,8 +464,8 @@ class LoadImagesAndLabels(Dataset):
         self.stride = stride
         self.path = path
         self.albumentations = Albumentations(size=img_size) if augment else None
-        LOGGER.info(f"Lowpass filtering on the fly to {lowpass} angstroms")
         if lowpass > 0:
+            LOGGER.info(f"Lowpass filtering on the fly to {lowpass} angstroms")
             self.lowpass_filter = filtering.get_relion_style_lowpass_filter((4096, 4096), lowpass, 127, 6)
             self.lowpass_filter_half = filtering.get_relion_style_lowpass_filter((4096, 2048), lowpass, 127, 6)
         self.lowpass = lowpass
@@ -822,7 +822,8 @@ class LoadImagesAndLabels(Dataset):
         if filter == "ee":
             img4 = filtering.enhance_edge_features(img4.astype(np.float32))
 
-        if self.lowpass > 0 or filter != None:
+        if self.lowpass > 0 or filter is not None:
+            print(f"lowpass: {self.lowpass})
             img4 = filtering.normalise_to_8bit_range(img4)
             img4 = img4.astype(np.uint8)
 
